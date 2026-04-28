@@ -1,20 +1,20 @@
-# AI Decision Dashboard 交接问题清单
+# AI Decision Dashboard 連携確認リスト
 
-## 给 Member 2：Backend AI Specialist
+## Member 2：Backend AI Specialist への確認事項
 
-我需要确认 AI 推荐接口的细节：
+AI 推薦 API について、以下の内容を確認したいです。
 
-1. 获取 AI 推荐的接口路径是什么？
+1. AI 推薦を取得する API endpoint は何ですか？
 
-   示例：
+   例：
 
    ```text
    GET /api/ai/recommendations?date=2026-04-27
    ```
 
-2. 推荐接口返回的 JSON 格式是什么？
+2. 推薦 API が返す JSON 形式はどのようになりますか？
 
-   我目前前端使用的格式是：
+   現在、フロントエンド側では以下の形式を想定しています。
 
    ```json
    {
@@ -34,45 +34,44 @@
    }
    ```
 
-3. 如果 AI 生成失败，会返回什么错误格式？
+3. AI の生成に失敗した場合、どのような error response が返りますか？
 
-4. AI 推荐是否会包含早餐、午餐、晚餐分类，还是统一推荐后由前端保存成 Dinner？
+4. AI 推薦には breakfast、lunch、dinner などの meal type が含まれますか？それとも、推薦結果は共通で返され、フロントエンド側で Dinner として保存する想定ですか？
 
-## 给 Member 3：Frontend Lead
+## Member 3：Frontend Lead への確認事項
 
-我需要确认前端项目结构和公共工具：
+フロントエンドのプロジェクト構成と共通機能について、以下の内容を確認したいです。
 
-1. 我的组件应该放在哪个目录？
+1. 私のコンポーネントはどのディレクトリに配置すべきですか？
 
-   目前建议：
+   現在の提案：
 
    ```text
    src/components/ai/
    ```
 
-2. 项目里是否已经封装了 Axios？
+2. プロジェクト内に共通の Axios instance または API helper はありますか？
 
-   如果有，我会把 `src/services/aiRecommendationApi.ts` 里的 mock 调用替换成统一的 API helper。
+   ある場合、`src/services/aiRecommendationApi.ts` の mock 呼び出しを、共通の API helper を使う形に置き換えます。
 
-3. `selectedDate` 从哪个 Pinia store 读取？
+3. `selectedDate` はどの Pinia store から取得すればよいですか？
 
-4. 保存成功后，是否有统一的 toast/message 组件？
+4. 保存成功後に表示する toast/message 用の共通コンポーネントはありますか？
 
-5. 是否已有 Tailwind CSS 或 UI 组件库规范？
+5. Tailwind CSS または UI component library に関するチーム内ルールはありますか？
 
-## 给 Member 4：Frontend UI - Interactive Timeline
+## Member 4：Frontend UI - Interactive Timeline への確認事項
 
-我需要确认推荐保存为 Dinner 后，Timeline 怎么更新：
+AI 推薦を Dinner として保存した後、Timeline をどのように更新するか確認したいです。
 
-1. 我点击 `Accept as Dinner` 保存成功后，你的 timeline 是否需要重新请求当天 meals？
+1. 私が `Accept as Dinner` をクリックして保存に成功した後、Timeline 側で当日の meals を再取得する必要がありますか？
 
-2. 保存成功后是否要触发某个事件？
+2. 保存成功後に、こちらから何らかの event を emit する必要がありますか？
 
-   示例：
+   例：
 
    ```ts
    emit('accepted', meal)
    ```
 
-3. Timeline 需要我返回完整 meal 数据，还是只需要通知你刷新？
-
+3. Timeline 側では、保存された meal の完全なデータが必要ですか？それとも、再読み込みの通知だけで十分ですか？
