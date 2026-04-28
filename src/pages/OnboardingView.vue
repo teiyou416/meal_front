@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
-import { logout as logoutAPI } from '@/api/auth'
 import { updateUserProfile } from '@/api/user'
 import type { FitnessGoal, TrainingExperience } from '@/types'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
-const { id, initials, name } = storeToRefs(userStore)
 
 const trainingOptions: Array<{ value: TrainingExperience; label: string }> = [
   { value: 'fitness', label: '健身' },
@@ -33,44 +30,44 @@ const form = reactive({
   monthlyFoodBudget: userStore.monthlyFoodBudget ? String(userStore.monthlyFoodBudget) : '',
 })
 
-const saveLoading = ref(false)
-const saveError = ref('')
-const saveSuccess = ref('')
+const loading = ref(false)
+const errorMessage = ref('')
+const infoMessage = ref('')
 
-async function saveProfile() {
-  saveError.value = ''
-  saveSuccess.value = ''
+async function submitQuestionnaire() {
+  errorMessage.value = ''
+  infoMessage.value = ''
 
   const heightCm = Number(form.heightCm)
   const weightKg = Number(form.weightKg)
   const monthlyFoodBudget = Number(form.monthlyFoodBudget)
 
   if (!Number.isFinite(heightCm) || heightCm < 80 || heightCm > 260) {
-    saveError.value = '请输入有效的身高（80-260 cm）。'
+    errorMessage.value = '请输入有效的身高（80-260 cm）。'
     return
   }
 
   if (!Number.isFinite(weightKg) || weightKg < 20 || weightKg > 300) {
-    saveError.value = '请输入有效的体重（20-300 kg）。'
+    errorMessage.value = '请输入有效的体重（20-300 kg）。'
     return
   }
 
   if (form.trainingExperience.length === 0) {
-    saveError.value = '请至少选择一项运动经验。'
+    errorMessage.value = '请至少选择一项运动经验。'
     return
   }
 
   if (!form.fitnessGoal) {
-    saveError.value = '请选择目标。'
+    errorMessage.value = '请选择目标。'
     return
   }
 
   if (!Number.isFinite(monthlyFoodBudget) || monthlyFoodBudget < 100) {
-    saveError.value = '请输入有效的每月饮食费上限（至少 100）。'
+    errorMessage.value = '请输入有效的每月饮食费上限（至少 100）。'
     return
   }
 
-  saveLoading.value = true
+  loading.value = true
 
   try {
     await updateUserProfile({
@@ -89,31 +86,43 @@ async function saveProfile() {
       monthlyFoodBudget,
     })
 
-    saveSuccess.value = '资料已更新。'
+    await router.push('/profile')
   } catch (error) {
-    if (error instanceof Error && error.message) {
-      saveError.value = error.message
+    if (shouldFallbackToLocal(error)) {
+      userStore.updateQuestionnaire({
+        heightCm,
+        weightKg,
+        trainingExperience: form.trainingExperience,
+        fitnessGoal: form.fitnessGoal,
+        monthlyFoodBudget,
+      })
+
+      infoMessage.value = '后端资料接口暂不可用，已先保存到本地。后端恢复后可在 Profile 页再次保存到数据库。'
+      await router.push('/profile')
       return
     }
 
-    saveError.value = '保存失败，请稍后重试。'
+    if (error instanceof Error && error.message) {
+      errorMessage.value = error.message
+      return
+    }
+
+    errorMessage.value = '提交失败，请稍后重试。'
   } finally {
-    saveLoading.value = false
+    loading.value = false
   }
 }
 
-async function logout() {
-  try {
-    if (userStore.token) {
-      await logoutAPI()
-    }
-  } catch (error) {
-    console.warn('Logout request failed, clearing local session anyway.', error)
-  } finally {
-    userStore.clearUser()
+function shouldFallbackToLocal(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
   }
 
-  await router.push('/login')
+  return (
+    error.message.includes('status code 404') ||
+    error.message.includes('status code 500') ||
+    error.message.includes('Network Error')
+  )
 }
 </script>
 
@@ -121,31 +130,20 @@ async function logout() {
   <section class="page">
     <div class="page-header">
       <div>
-        <p class="eyebrow">Profile</p>
-        <h2>用户资料</h2>
+        <p class="eyebrow">Onboarding</p>
+        <h2>完善基础资料</h2>
       </div>
     </div>
 
-    <section class="panel profile-panel">
-      <div class="profile-avatar" aria-hidden="true">
-        {{ initials || 'U' }}
-      </div>
+    <section class="panel onboarding-panel">
+      <p class="subtle-text">注册后请先完成问卷，后续你可以在 Profile 页面继续修改。</p>
 
-      <div class="profile-details">
-        <p class="label">Current user</p>
-        <h3>{{ name || 'Guest' }}</h3>
-        <p class="subtle-text">User ID: {{ id || 'not signed in' }}</p>
-      </div>
-    </section>
+      <form class="questionnaire-form" @submit.prevent="submitQuestionnaire">
+        <label class="field-label" for="height-cm">身高 (cm)</label>
+        <input id="height-cm" v-model="form.heightCm" inputmode="decimal" placeholder="例如 170" required />
 
-    <section class="panel form-panel">
-      <h3 class="section-title">基础资料（可随时修改）</h3>
-      <form class="profile-form" @submit.prevent="saveProfile">
-        <label class="field-label" for="profile-height">身高 (cm)</label>
-        <input id="profile-height" v-model="form.heightCm" inputmode="decimal" required />
-
-        <label class="field-label" for="profile-weight">体重 (kg)</label>
-        <input id="profile-weight" v-model="form.weightKg" inputmode="decimal" required />
+        <label class="field-label" for="weight-kg">体重 (kg)</label>
+        <input id="weight-kg" v-model="form.weightKg" inputmode="decimal" placeholder="例如 62" required />
 
         <fieldset class="checkbox-group">
           <legend class="field-label">运动经验（可多选）</legend>
@@ -158,63 +156,37 @@ async function logout() {
         <fieldset class="radio-group">
           <legend class="field-label">目标（单选）</legend>
           <label v-for="option in goalOptions" :key="option.value" class="checkbox-row">
-            <input v-model="form.fitnessGoal" type="radio" name="profile-goal" :value="option.value" />
+            <input v-model="form.fitnessGoal" type="radio" name="fitness-goal" :value="option.value" />
             <span>{{ option.label }}</span>
           </label>
         </fieldset>
 
-        <label class="field-label" for="profile-budget">每月饮食费上限</label>
-        <input id="profile-budget" v-model="form.monthlyFoodBudget" inputmode="numeric" required />
+        <label class="field-label" for="monthly-budget">每月饮食费上限</label>
+        <input
+          id="monthly-budget"
+          v-model="form.monthlyFoodBudget"
+          inputmode="numeric"
+          placeholder="例如 2500"
+          required
+        />
 
-        <p v-if="saveError" class="error-message">{{ saveError }}</p>
-        <p v-if="saveSuccess" class="success-message">{{ saveSuccess }}</p>
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+        <p v-if="infoMessage" class="success-message">{{ infoMessage }}</p>
 
-        <button type="submit" :disabled="saveLoading">
-          {{ saveLoading ? '保存中...' : '保存资料' }}
+        <button type="submit" :disabled="loading">
+          {{ loading ? '提交中...' : '提交并保存资料' }}
         </button>
       </form>
-    </section>
-
-    <section class="panel">
-      <button type="button" class="danger-button" @click="logout">Log out</button>
     </section>
   </section>
 </template>
 
 <style scoped>
-.profile-panel {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.profile-avatar {
-  display: grid;
-  flex: 0 0 auto;
-  width: 4rem;
-  height: 4rem;
-  place-items: center;
-  border-radius: 999px;
-  color: #ffffff;
-  background: #1f6f63;
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-
-.profile-details h3 {
-  margin: 0;
-  font-size: 1.35rem;
-}
-
-.form-panel {
+.onboarding-panel {
   max-width: 720px;
 }
 
-.section-title {
-  margin-top: 0;
-}
-
-.profile-form {
+.questionnaire-form {
   display: grid;
   gap: 0.85rem;
 }
@@ -245,6 +217,11 @@ async function logout() {
   height: 1rem;
 }
 
+.subtle-text {
+  margin-top: 0;
+  color: #5c6a78;
+}
+
 .error-message {
   margin: 0;
   color: #b42318;
@@ -257,10 +234,5 @@ async function logout() {
   color: #0b6e4f;
   font-size: 0.9rem;
   font-weight: 600;
-}
-
-.danger-button {
-  border-color: #b42318;
-  background: #b42318;
 }
 </style>

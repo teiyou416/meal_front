@@ -111,5 +111,10 @@ npm run preview
 必要に応じて `.env.example` を `.env` にコピーし、バックエンド API の URL を調整します。
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=/api/v1
 ```
+
+说明：
+
+- 开发环境下 Vite 已配置把 `/api/v1` 代理到 `http://localhost:8080`，可避免浏览器跨域问题。
+- 若你直接调用远程后端，也可以把 `VITE_API_BASE_URL` 改成完整地址（例如 `http://host:8080/api/v1`）。

@@ -18,6 +18,7 @@ const { initials, isLoggedIn, name } = storeToRefs(userStore)
 
       <nav class="nav-list" aria-label="Main navigation">
         <RouterLink to="/">Dashboard</RouterLink>
+        <RouterLink v-if="isLoggedIn" to="/profile">Profile</RouterLink>
       </nav>
     </aside>
 
