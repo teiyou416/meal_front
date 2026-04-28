@@ -90,6 +90,54 @@ input {
   padding: 2rem;
 }
 
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.topbar strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.topbar-kicker {
+  margin: 0 0 0.18rem;
+  color: #5c6a78;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.avatar-link {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #1f6f63;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.avatar-link:hover {
+  background: #17574d;
+}
+
+.login-link {
+  border: 1px solid #1f6f63;
+  border-radius: 6px;
+  color: #1f6f63;
+  padding: 0.58rem 0.85rem;
+  text-decoration: none;
+}
+
+.login-link:hover {
+  background: #eef8f5;
+}
+
 .page {
   display: grid;
   gap: 1.25rem;

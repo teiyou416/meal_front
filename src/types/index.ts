@@ -1,15 +1,26 @@
-export interface ApiResponse<T> {
+export interface ApiResponse<T = unknown> {
   code: number
   message: string
-  data: T
+  data?: T
 }
+
+export type TrainingExperience = 'fitness' | 'yoga' | 'pilates' | 'climbing'
+export type FitnessGoal = 'lose_weight' | 'build_muscle' | 'maintain_shape'
 
 export interface User {
   id: string
   name: string
+  email?: string
   token?: string
+  refreshToken?: string
+  sessionId?: string
   allergies: string[]
   dietaryPreferences: string[]
+  heightCm?: number | null
+  weightKg?: number | null
+  trainingExperience: TrainingExperience[]
+  fitnessGoal?: FitnessGoal | null
+  monthlyFoodBudget?: number | null
 }
 
 export interface Activity {

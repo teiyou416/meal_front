@@ -31,7 +31,7 @@ async function loadMeals(date: string) {
 
   try {
     const response = await getMealsByDate(date)
-    meals.value = response.data
+    meals.value = response.data ?? []
   } catch (error) {
     mealsMessage.value = '后端不可用，当前显示本地示例饮食记录。'
     meals.value = createFallbackMeals(date)
