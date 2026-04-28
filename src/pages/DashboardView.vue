@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 
 import { getMealsByDate } from '@/api/meal'
 import AIDecisionDashboard from '@/components/ai/AIDecisionDashboard.vue'
+import GoogleCalendar from '@/components/ai/calendar/GoogleCalendar.vue'
 import { useDateStore } from '@/stores/date'
 import type { Meal } from '@/types'
 
@@ -98,6 +99,10 @@ function createFallbackMeals(date: string): Meal[] {
         />
         <button type="button" @click="dateStore.goToday">今天</button>
       </div>
+    </div>
+
+    <div class="content-grid">
+      <GoogleCalendar />
     </div>
 
     <div class="content-grid">
