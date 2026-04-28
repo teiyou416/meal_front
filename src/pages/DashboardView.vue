@@ -32,7 +32,7 @@ async function loadMeals(date: string) {
     const response = await getMealsByDate(date)
     meals.value = response.data ?? []
   } catch (error) {
-    mealsMessage.value = '后端不可用，当前显示本地示例饮食记录。'
+    mealsMessage.value = 'Backend is unavailable. Showing local sample meal records.'
     meals.value = createFallbackMeals(date)
   } finally {
     mealsLoading.value = false
@@ -86,28 +86,28 @@ function createFallbackMeals(date: string): Meal[] {
     <div class="page-header">
       <div>
         <p class="eyebrow">Unified Workspace</p>
-        <h2>饮食记录 + AI 推荐工作台</h2>
+        <h2>Meal Records + AI Recommendation Workspace</h2>
       </div>
 
       <div class="toolbar">
         <input
           :value="selectedDate"
           type="date"
-          aria-label="选择日期"
+          aria-label="Select date"
           @input="dateStore.setSelectedDate(($event.target as HTMLInputElement).value)"
         />
-        <button type="button" @click="dateStore.goToday">今天</button>
+        <button type="button" @click="dateStore.goToday">Today</button>
       </div>
     </div>
 
     <div class="content-grid">
       <section class="panel">
-        <p class="label">当前月份</p>
+        <p class="label">Current month</p>
         <strong>{{ selectedMonth }}</strong>
       </section>
 
       <section class="panel">
-        <p class="label">当前日期</p>
+        <p class="label">Current date</p>
         <strong>{{ selectedDate }}</strong>
       </section>
     </div>
@@ -117,10 +117,15 @@ function createFallbackMeals(date: string): Meal[] {
         <div class="section-header">
           <div>
             <p class="label">Meals</p>
-            <h3>当日饮食记录</h3>
+            <h3>Daily meal records</h3>
           </div>
-          <button type="button" class="button-outline" :disabled="mealsLoading" @click="loadMeals(selectedDate)">
-            刷新记录
+          <button
+            type="button"
+            class="button-outline"
+            :disabled="mealsLoading"
+            @click="loadMeals(selectedDate)"
+          >
+            Refresh records
           </button>
         </div>
 
@@ -128,7 +133,7 @@ function createFallbackMeals(date: string): Meal[] {
           {{ mealsMessage }}
         </p>
 
-        <p v-if="mealsLoading" class="subtle-text">正在加载饮食记录...</p>
+        <p v-if="mealsLoading" class="subtle-text">Loading meal records...</p>
 
         <ul v-else-if="hasMeals" class="meal-list">
           <li v-for="meal in meals" :key="meal.id" class="meal-list-item">
@@ -140,7 +145,7 @@ function createFallbackMeals(date: string): Meal[] {
           </li>
         </ul>
 
-        <p v-else class="subtle-text">暂无饮食记录。</p>
+        <p v-else class="subtle-text">No meal records yet.</p>
       </section>
 
       <AIDecisionDashboard :selected-date="selectedDate" @accepted="handleRecommendationAccepted" />
