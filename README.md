@@ -1,92 +1,92 @@
-# Member 5 - AI Decision Dashboard 初步工作包
-i am wu
-这是给 `Member 5: Frontend UI - AI Decision Dashboard` 准备的前端初始成果。
+# Member 5 - AI Decision Dashboard 初期作業パッケージ
 
-当前内容不依赖真实后端，先用 mock 数据完成：
+これは `Member 5: Frontend UI - AI Decision Dashboard` のために準備した、フロントエンドの初期成果物です。
 
-- AI 推荐菜品卡片
-- AI 生成中的 Skeleton Loading 状态
-- 推荐失败或暂无推荐时的基础状态
-- 点击 `Accept as Dinner` 的前端逻辑占位
-- 和其他成员交接时需要确认的问题
+現時点では実際のバックエンドには依存せず、mock データを使って以下の機能を実装しています。
 
-## 你负责的范围
+- AI による食事推薦カード
+- AI 生成中の Skeleton Loading 表示
+- 推薦の取得失敗、または推薦がない場合の基本表示
+- `Accept as Dinner` をクリックしたときのフロントエンド側の仮ロジック
+- 他メンバーと連携するときに確認すべき項目
 
-你的模块接收 AI 推荐数据，把它显示成用户能看懂的 Dashboard，并允许用户一键接受某个推荐，把它保存为晚餐。
+## 担当範囲
 
-简单说：
+このモジュールは、AI から受け取った推薦データをユーザーに分かりやすい Dashboard として表示し、ユーザーが推薦された食事をワンクリックで夕食として保存できるようにする部分です。
+
+簡単にまとめると、次の流れを担当します。
 
 ```text
-AI/Backend 给你推荐数据
+AI/Backend から推薦データを受け取る
 ↓
-你显示推荐卡片
+推薦カードとして表示する
 ↓
-用户点击 Accept as Dinner
+ユーザーが Accept as Dinner をクリックする
 ↓
-你调用后端接口保存为 Dinner
+バックエンド API を呼び出して Dinner として保存する
 ```
 
-## 文件说明
+## ファイル説明
 
 ```text
 src/components/ai/AIDecisionDashboard.vue
 ```
 
-整个 AI 推荐面板。负责加载推荐、显示 loading、错误、空状态，以及处理用户点击接受推荐。
+AI 推薦エリア全体のコンポーネントです。推薦データの読み込み、loading 状態、エラー状態、空状態、ユーザーが推薦を受け入れたときの処理を担当します。
 
 ```text
 src/components/ai/RecommendationCard.vue
 ```
 
-单个推荐菜品卡片。负责展示菜名、推荐原因、标签、营养信息和接受按钮。
+1 つの推薦料理を表示するカードコンポーネントです。料理名、推薦理由、栄養タグ、栄養情報、受け入れボタンを表示します。
 
 ```text
 src/components/ai/RecommendationSkeleton.vue
 ```
 
-AI 正在生成推荐时显示的骨架屏。
+AI が推薦を生成している間に表示する Skeleton Loading コンポーネントです。
 
 ```text
 src/mocks/aiRecommendations.ts
 ```
 
-假数据。等 Member 2 给出真实 API 后，可以用真实接口替换这里。
+仮データです。Member 2 から実際の API が提供された後、この mock データを実 API のレスポンスに置き換えます。
 
 ```text
 src/services/aiRecommendationApi.ts
 ```
 
-接口占位文件。现在返回 mock 数据，以后改成调用后端 API。
+API 接続用の仮ファイルです。現在は mock データを返していますが、後でバックエンド API を呼び出す処理に変更します。
 
 ```text
 src/types/aiRecommendation.ts
 ```
 
-TypeScript 类型定义，规定推荐菜品应该有哪些字段。
+TypeScript の型定義です。AI 推薦データや、食事として保存するときに必要なデータ構造を定義しています。
 
 ```text
 handoff-questions.md
 ```
 
-交接时要问其他成员的问题。
+他メンバーと作業を連携するときに確認する質問リストです。
 
 ```text
 prototype.html
 ```
 
-可直接在浏览器打开的静态原型，用来快速展示你的 Dashboard 想法。
+ブラウザで直接開ける静的プロトタイプです。AI Decision Dashboard の見た目と基本的な操作イメージを素早く共有できます。
 
-## 建议开发顺序
+## 推奨する開発順序
 
-1. 先打开 `prototype.html` 看整体效果。
-2. 阅读 `src/types/aiRecommendation.ts`，理解推荐数据有哪些字段。
-3. 阅读 `RecommendationCard.vue`，理解一张推荐卡片怎么组成。
-4. 阅读 `AIDecisionDashboard.vue`，理解 loading、请求数据、点击保存之间的关系。
-5. 和 Member 2、Member 3、Member 4 根据 `handoff-questions.md` 对接。
+1. まず `prototype.html` を開いて、全体の見た目を確認する。
+2. `src/types/aiRecommendation.ts` を読み、推薦データにどのようなフィールドが必要か確認する。
+3. `RecommendationCard.vue` を読み、推薦カードがどのように構成されているか確認する。
+4. `AIDecisionDashboard.vue` を読み、loading、データ取得、保存ボタンの処理の関係を理解する。
+5. `handoff-questions.md` を使って、Member 2、Member 3、Member 4 と連携内容を確認する。
 
-# Meal Calendar Frontend
+## Meal Calendar Frontend
 
-Vue 3 + TypeScript frontend foundation for the AI meal recommendation calendar app.
+AI 食事推薦カレンダーアプリのための Vue 3 + TypeScript フロントエンド基盤です。
 
 ## Tech Stack
 
@@ -108,7 +108,7 @@ npm run preview
 
 ## Environment
 
-Copy `.env.example` to `.env` and adjust the backend API URL when needed.
+必要に応じて `.env.example` を `.env` にコピーし、バックエンド API の URL を調整します。
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
