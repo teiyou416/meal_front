@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 
 import { getMealsByDate } from '@/api/meal'
 import AIDecisionDashboard from '@/components/ai/AIDecisionDashboard.vue'
-import GoogleCalendar from '@/components/ai/calendar/GoogleCalendar.vue'
+import GoogleCalendar from '@/components/calendar/GoogleCalendar.vue'
 import { useDateStore } from '@/stores/date'
 import type { Meal } from '@/types'
 
