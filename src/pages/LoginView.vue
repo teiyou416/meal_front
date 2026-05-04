@@ -38,17 +38,17 @@ async function handleLogin() {
   const password = loginForm.password
 
   if (!username || !password) {
-    loginError.value = '请输入用户名和密码。'
+    loginError.value = 'Please enter a username and password.'
     return
   }
 
   if (!USERNAME_REGEX.test(username)) {
-    loginError.value = '用户名需为 3-32 位字母或数字。'
+    loginError.value = 'Username must be 3-32 letters or numbers.'
     return
   }
 
   if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
-    loginError.value = '密码长度需为 8-72 位。'
+    loginError.value = 'Password must be 8-72 characters long.'
     return
   }
 
@@ -63,7 +63,7 @@ async function handleLogin() {
     const data = response.data
 
     if (!data?.access_token || !data.user) {
-      loginError.value = '登录响应缺少必要字段。'
+      loginError.value = 'Login response is missing required fields.'
       return
     }
 
@@ -81,7 +81,7 @@ async function handleLogin() {
 
     await router.push(userStore.questionnaireCompleted ? '/' : '/onboarding')
   } catch (error) {
-    loginError.value = extractMessage(error, '登录失败，请稍后重试。')
+    loginError.value = extractMessage(error, 'Login failed. Please try again later.')
   } finally {
     loginLoading.value = false
   }
@@ -108,22 +108,22 @@ async function handleRegister() {
   const email = registerForm.email.trim()
 
   if (!username || !password) {
-    registerError.value = '请输入用户名和密码。'
+    registerError.value = 'Please enter a username and password.'
     return
   }
 
   if (!USERNAME_REGEX.test(username)) {
-    registerError.value = '用户名需为 3-32 位字母或数字。'
+    registerError.value = 'Username must be 3-32 letters or numbers.'
     return
   }
 
   if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
-    registerError.value = '密码长度需为 8-72 位。'
+    registerError.value = 'Password must be 8-72 characters long.'
     return
   }
 
   if (email && !isValidEmail(email)) {
-    registerError.value = '邮箱格式不正确。'
+    registerError.value = 'Email format is invalid.'
     return
   }
 
@@ -141,7 +141,7 @@ async function handleRegister() {
       const loginData = loginResponse.data
 
       if (!loginData?.access_token || !loginData.user) {
-        registerSuccess.value = '注册成功，请登录后填写问卷。'
+        registerSuccess.value = 'Registration succeeded. Please sign in and complete onboarding.'
         return
       }
 
@@ -160,13 +160,13 @@ async function handleRegister() {
       closeRegisterPanel()
       await router.push('/onboarding')
     } catch {
-      registerSuccess.value = '注册成功，请登录后填写问卷。'
+      registerSuccess.value = 'Registration succeeded. Please sign in and complete onboarding.'
       loginForm.username = username
       loginForm.password = ''
       registerForm.password = ''
     }
   } catch (error) {
-    registerError.value = extractMessage(error, '注册失败，请稍后重试。')
+    registerError.value = extractMessage(error, 'Registration failed. Please try again later.')
   } finally {
     registerLoading.value = false
   }
@@ -177,7 +177,7 @@ async function syncUserFromServer(fallback: { id: string; name: string; email?: 
     const meResponse = await getCurrentUser()
 
     if (!meResponse.data) {
-      throw new Error('缺少用户资料')
+      throw new Error('User profile is missing.')
     }
 
     userStore.setUser(toUserModel(meResponse.data, { name: fallback.name, email: fallback.email }))
@@ -215,10 +215,10 @@ function isValidEmail(value: string) {
     <div class="login-panel">
       <p class="eyebrow">Account Access</p>
       <h2>Sign in to Meal App</h2>
-      <p class="subtle-text">登录后可以访问 Dashboard、Profile 与 AI 推荐流程。</p>
+      <p class="subtle-text">Sign in to access Dashboard, Profile, and AI recommendations.</p>
 
       <form class="auth-form" @submit.prevent="handleLogin">
-        <label class="field-label" for="login-username">用户名</label>
+        <label class="field-label" for="login-username">Username</label>
         <input
           id="login-username"
           v-model="loginForm.username"
@@ -230,7 +230,7 @@ function isValidEmail(value: string) {
           required
         />
 
-        <label class="field-label" for="login-password">密码</label>
+        <label class="field-label" for="login-password">Password</label>
         <input
           id="login-password"
           v-model="loginForm.password"
@@ -243,21 +243,21 @@ function isValidEmail(value: string) {
         />
 
         <p v-if="loginError" class="error-message">{{ loginError }}</p>
-        <button type="submit" :disabled="loginLoading">{{ loginLoading ? '登录中...' : '登录' }}</button>
+        <button type="submit" :disabled="loginLoading">{{ loginLoading ? 'Signing in...' : 'Sign in' }}</button>
       </form>
 
-      <button type="button" class="secondary-button" @click="openRegisterPanel">注册新账号</button>
+      <button type="button" class="secondary-button" @click="openRegisterPanel">Create account</button>
     </div>
 
     <div v-if="showRegisterPanel" class="modal-mask" @click.self="closeRegisterPanel">
       <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="register-title">
         <div class="modal-header">
-          <h3 id="register-title">注册账号</h3>
-          <button type="button" class="close-button" aria-label="关闭注册面板" @click="closeRegisterPanel">×</button>
+          <h3 id="register-title">Create account</h3>
+          <button type="button" class="close-button" aria-label="Close registration panel" @click="closeRegisterPanel">×</button>
         </div>
 
         <form class="auth-form" @submit.prevent="handleRegister">
-          <label class="field-label" for="register-username">用户名</label>
+          <label class="field-label" for="register-username">Username</label>
           <input
             id="register-username"
             v-model="registerForm.username"
@@ -268,10 +268,10 @@ function isValidEmail(value: string) {
             required
           />
 
-          <label class="field-label" for="register-email">邮箱（可选）</label>
+          <label class="field-label" for="register-email">Email (optional)</label>
           <input id="register-email" v-model="registerForm.email" name="register-email" type="email" />
 
-          <label class="field-label" for="register-password">密码</label>
+          <label class="field-label" for="register-password">Password</label>
           <input
             id="register-password"
             v-model="registerForm.password"
@@ -287,7 +287,7 @@ function isValidEmail(value: string) {
           <p v-if="registerSuccess" class="success-message">{{ registerSuccess }}</p>
 
           <button type="submit" :disabled="registerLoading">
-            {{ registerLoading ? '注册中...' : '确认注册' }}
+            {{ registerLoading ? 'Creating account...' : 'Create account' }}
           </button>
         </form>
       </section>

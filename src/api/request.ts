@@ -46,7 +46,7 @@ request.interceptors.response.use(
     return Promise.reject(createBusinessError(payload.code, payload.message))
   },
   (error: AxiosError<{ message?: string }>) => {
-    const message = error.response?.data?.message ?? error.message ?? '请求失败'
+    const message = error.response?.data?.message ?? error.message ?? 'Request failed'
 
     console.error('[API Error]', message)
     return Promise.reject(createBusinessError(-1, message))
@@ -65,7 +65,7 @@ async function retryWithRefreshedToken(config: RetryableRequestConfig, message: 
     !userStore.refreshToken
   ) {
     userStore.clearUser()
-    return Promise.reject(createBusinessError(10005, message || '鉴权失败'))
+    return Promise.reject(createBusinessError(10005, message || 'Authentication failed'))
   }
 
   config._retried = true
@@ -100,7 +100,7 @@ async function refreshAccessToken() {
         const payload = response.data
 
         if (payload.code !== 0 || !payload.data?.access_token) {
-          throw createBusinessError(payload.code, payload.message || '刷新 Token 失败')
+          throw createBusinessError(payload.code, payload.message || 'Failed to refresh token')
         }
 
         userStore.setSession({
@@ -120,7 +120,7 @@ async function refreshAccessToken() {
 }
 
 function createBusinessError(code: number, message: string) {
-  const error = new Error(message || '请求失败') as Error & { bizCode?: number }
+  const error = new Error(message || 'Request failed') as Error & { bizCode?: number }
   error.bizCode = code
   return error
 }

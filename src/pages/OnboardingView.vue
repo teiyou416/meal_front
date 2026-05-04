@@ -10,16 +10,16 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const trainingOptions: Array<{ value: TrainingExperience; label: string }> = [
-  { value: 'fitness', label: '健身' },
-  { value: 'yoga', label: '瑜伽' },
-  { value: 'pilates', label: '普拉提' },
-  { value: 'climbing', label: '攀岩' },
+  { value: 'fitness', label: 'Fitness' },
+  { value: 'yoga', label: 'Yoga' },
+  { value: 'pilates', label: 'Pilates' },
+  { value: 'climbing', label: 'Climbing' },
 ]
 
 const goalOptions: Array<{ value: FitnessGoal; label: string }> = [
-  { value: 'lose_weight', label: '减重' },
-  { value: 'build_muscle', label: '增肌' },
-  { value: 'maintain_shape', label: '维持身材' },
+  { value: 'lose_weight', label: 'Lose weight' },
+  { value: 'build_muscle', label: 'Build muscle' },
+  { value: 'maintain_shape', label: 'Maintain shape' },
 ]
 
 const form = reactive({
@@ -43,27 +43,27 @@ async function submitQuestionnaire() {
   const monthlyFoodBudget = Number(form.monthlyFoodBudget)
 
   if (!Number.isFinite(heightCm) || heightCm < 80 || heightCm > 260) {
-    errorMessage.value = '请输入有效的身高（80-260 cm）。'
+    errorMessage.value = 'Please enter a valid height (80-260 cm).'
     return
   }
 
   if (!Number.isFinite(weightKg) || weightKg < 20 || weightKg > 300) {
-    errorMessage.value = '请输入有效的体重（20-300 kg）。'
+    errorMessage.value = 'Please enter a valid weight (20-300 kg).'
     return
   }
 
   if (form.trainingExperience.length === 0) {
-    errorMessage.value = '请至少选择一项运动经验。'
+    errorMessage.value = 'Please select at least one training experience.'
     return
   }
 
   if (!form.fitnessGoal) {
-    errorMessage.value = '请选择目标。'
+    errorMessage.value = 'Please select a goal.'
     return
   }
 
   if (!Number.isFinite(monthlyFoodBudget) || monthlyFoodBudget < 100) {
-    errorMessage.value = '请输入有效的每月饮食费上限（至少 100）。'
+    errorMessage.value = 'Please enter a valid monthly food budget (at least 100).'
     return
   }
 
@@ -97,7 +97,7 @@ async function submitQuestionnaire() {
         monthlyFoodBudget,
       })
 
-      infoMessage.value = '后端资料接口暂不可用，已先保存到本地。后端恢复后可在 Profile 页再次保存到数据库。'
+      infoMessage.value = 'The profile API is temporarily unavailable, so your data was saved locally. You can save it to the database again from Profile after the backend recovers.'
       await router.push('/profile')
       return
     }
@@ -107,7 +107,7 @@ async function submitQuestionnaire() {
       return
     }
 
-    errorMessage.value = '提交失败，请稍后重试。'
+    errorMessage.value = 'Submission failed. Please try again later.'
   } finally {
     loading.value = false
   }
@@ -131,22 +131,22 @@ function shouldFallbackToLocal(error: unknown) {
     <div class="page-header">
       <div>
         <p class="eyebrow">Onboarding</p>
-        <h2>完善基础资料</h2>
+        <h2>Complete your basic profile</h2>
       </div>
     </div>
 
     <section class="panel onboarding-panel">
-      <p class="subtle-text">注册后请先完成问卷，后续你可以在 Profile 页面继续修改。</p>
+      <p class="subtle-text">Please complete this questionnaire after registration. You can keep editing it on the Profile page later.</p>
 
       <form class="questionnaire-form" @submit.prevent="submitQuestionnaire">
-        <label class="field-label" for="height-cm">身高 (cm)</label>
-        <input id="height-cm" v-model="form.heightCm" inputmode="decimal" placeholder="例如 170" required />
+        <label class="field-label" for="height-cm">Height (cm)</label>
+        <input id="height-cm" v-model="form.heightCm" inputmode="decimal" placeholder="e.g. 170" required />
 
-        <label class="field-label" for="weight-kg">体重 (kg)</label>
-        <input id="weight-kg" v-model="form.weightKg" inputmode="decimal" placeholder="例如 62" required />
+        <label class="field-label" for="weight-kg">Weight (kg)</label>
+        <input id="weight-kg" v-model="form.weightKg" inputmode="decimal" placeholder="e.g. 62" required />
 
         <fieldset class="checkbox-group">
-          <legend class="field-label">运动经验（可多选）</legend>
+          <legend class="field-label">Training experience (multiple choices allowed)</legend>
           <label v-for="option in trainingOptions" :key="option.value" class="checkbox-row">
             <input v-model="form.trainingExperience" type="checkbox" :value="option.value" />
             <span>{{ option.label }}</span>
@@ -154,19 +154,19 @@ function shouldFallbackToLocal(error: unknown) {
         </fieldset>
 
         <fieldset class="radio-group">
-          <legend class="field-label">目标（单选）</legend>
+          <legend class="field-label">Goal (single choice)</legend>
           <label v-for="option in goalOptions" :key="option.value" class="checkbox-row">
             <input v-model="form.fitnessGoal" type="radio" name="fitness-goal" :value="option.value" />
             <span>{{ option.label }}</span>
           </label>
         </fieldset>
 
-        <label class="field-label" for="monthly-budget">每月饮食费上限</label>
+        <label class="field-label" for="monthly-budget">Monthly food budget limit</label>
         <input
           id="monthly-budget"
           v-model="form.monthlyFoodBudget"
           inputmode="numeric"
-          placeholder="例如 2500"
+          placeholder="e.g. 2500"
           required
         />
 
@@ -174,7 +174,7 @@ function shouldFallbackToLocal(error: unknown) {
         <p v-if="infoMessage" class="success-message">{{ infoMessage }}</p>
 
         <button type="submit" :disabled="loading">
-          {{ loading ? '提交中...' : '提交并保存资料' }}
+          {{ loading ? 'Submitting...' : 'Submit and save profile' }}
         </button>
       </form>
     </section>

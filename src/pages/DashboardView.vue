@@ -1,42 +1,156 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
-import { getMealsByDate } from '@/api/meal'
 import AIDecisionDashboard from '@/components/ai/AIDecisionDashboard.vue'
+import GoogleCalendar from '@/components/calendar/GoogleCalendar.vue'
 import { useDateStore } from '@/stores/date'
-import type { Meal } from '@/types'
+import type { Meal, MealType } from '@/types'
+
+interface CalendarDisplayEvent {
+  id: string
+  title: string
+  date: string
+  mealType?: MealType
+  start?: string
+  end?: string
+  description?: string
+  location?: string
+  htmlLink?: string
+}
+
+const LOCAL_MEALS_STORAGE_KEY = 'meal-app-local-meals'
+const MOCK_MEAL_DATE = '2026-05-31'
 
 const dateStore = useDateStore()
 const { selectedDate, selectedMonth } = storeToRefs(dateStore)
 
-const meals = ref<Meal[]>([])
-const mealsLoading = ref(false)
-const mealsMessage = ref('')
+const localMeals = ref<Meal[]>(loadLocalMeals())
+const googleEvents = ref<CalendarDisplayEvent[]>([])
+const detailDate = ref<string | null>(null)
+const isAiDrawerOpen = ref(false)
+const formMessage = ref('')
 
-const hasMeals = computed(() => meals.value.length > 0)
+const mealForm = reactive({
+  type: 'breakfast' as MealType,
+  content: '',
+  calories: '',
+})
 
-watch(
-  selectedDate,
-  (date) => {
-    void loadMeals(date)
-  },
-  { immediate: true },
+const hasDetailDate = computed(() => Boolean(detailDate.value))
+const detailMeals = computed(() => localMeals.value.filter((meal) => meal.date === detailDate.value))
+const detailEvents = computed(() => googleEvents.value.filter((event) => event.date === detailDate.value))
+const hasDetailMeals = computed(() => detailMeals.value.length > 0)
+const hasDetailEvents = computed(() => detailEvents.value.length > 0)
+
+const calendarMealEvents = computed<CalendarDisplayEvent[]>(() =>
+  localMeals.value.map((meal) => ({
+    id: meal.id,
+    title: `${toTitleCase(meal.type)}: ${meal.content}`,
+    date: meal.date,
+    mealType: meal.type,
+    description: meal.calories ? `${meal.calories} kcal` : undefined,
+  })),
 )
 
-async function loadMeals(date: string) {
-  mealsLoading.value = true
-  mealsMessage.value = ''
-
+function loadLocalMeals() {
   try {
-    const response = await getMealsByDate(date)
-    meals.value = response.data ?? []
+    const rawMeals = window.localStorage.getItem(LOCAL_MEALS_STORAGE_KEY)
+
+    if (rawMeals) {
+      const parsedMeals = JSON.parse(rawMeals) as Meal[]
+      return ensureMockMealDate(parsedMeals)
+    }
   } catch (error) {
-    mealsMessage.value = 'Backend is unavailable. Showing local sample meal records.'
-    meals.value = createFallbackMeals(date)
-  } finally {
-    mealsLoading.value = false
+    console.warn('Could not read local meals. Falling back to defaults.', error)
   }
+
+  return ensureMockMealDate([])
+}
+
+function ensureMockMealDate(meals: Meal[]) {
+  const hasMockDate = meals.some((meal) => meal.date === MOCK_MEAL_DATE)
+
+  if (hasMockDate) {
+    return meals
+  }
+
+  return [...meals, ...createFallbackMeals(MOCK_MEAL_DATE)]
+}
+
+function saveLocalMeals() {
+  window.localStorage.setItem(LOCAL_MEALS_STORAGE_KEY, JSON.stringify(localMeals.value))
+}
+
+function openDateDetail(date: string) {
+  detailDate.value = date
+  dateStore.setSelectedDate(date)
+  formMessage.value = ''
+}
+
+function closeDateDetail() {
+  detailDate.value = null
+  isAiDrawerOpen.value = false
+  formMessage.value = ''
+}
+
+function handleCalendarEventsLoaded(events: CalendarDisplayEvent[]) {
+  googleEvents.value = events
+}
+
+function addMealRecord() {
+  formMessage.value = ''
+
+  if (!detailDate.value) {
+    return
+  }
+
+  const content = mealForm.content.trim()
+  const calories = mealForm.calories ? Number(mealForm.calories) : undefined
+
+  if (!content) {
+    formMessage.value = 'Please enter meal details.'
+    return
+  }
+
+  if (calories !== undefined && (!Number.isFinite(calories) || calories < 0)) {
+    formMessage.value = 'Please enter a valid calorie value.'
+    return
+  }
+
+  localMeals.value = [
+    {
+      id: `local-${Date.now()}`,
+      date: detailDate.value,
+      type: mealForm.type,
+      content,
+      calories,
+    },
+    ...localMeals.value,
+  ]
+
+  saveLocalMeals()
+  mealForm.content = ''
+  mealForm.calories = ''
+  formMessage.value = 'Meal record saved locally.'
+}
+
+function deleteMealRecord(mealId: string) {
+  const meal = localMeals.value.find((item) => item.id === mealId)
+
+  if (!meal || !canDeleteMeal(meal)) {
+    return
+  }
+
+  const shouldDelete = window.confirm(`Delete "${meal.content}" from ${meal.date}?`)
+
+  if (!shouldDelete) {
+    return
+  }
+
+  localMeals.value = localMeals.value.filter((item) => item.id !== mealId)
+  saveLocalMeals()
+  formMessage.value = 'Meal record deleted.'
 }
 
 function handleRecommendationAccepted(payload: {
@@ -45,11 +159,11 @@ function handleRecommendationAccepted(payload: {
   date: string
   calories: number
 }) {
-  if (payload.date !== selectedDate.value) {
+  if (payload.date !== detailDate.value) {
     return
   }
 
-  meals.value = [
+  localMeals.value = [
     {
       id: `ai-${payload.recommendationId}-${Date.now()}`,
       date: payload.date,
@@ -57,8 +171,10 @@ function handleRecommendationAccepted(payload: {
       content: payload.name,
       calories: payload.calories,
     },
-    ...meals.value,
+    ...localMeals.value,
   ]
+
+  saveLocalMeals()
 }
 
 function createFallbackMeals(date: string): Meal[] {
@@ -78,6 +194,14 @@ function createFallbackMeals(date: string): Meal[] {
       calories: 560,
     },
   ]
+}
+
+function toTitleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function canDeleteMeal(meal: Meal) {
+  return meal.id.startsWith('local-') || meal.id.startsWith('ai-')
 }
 </script>
 
@@ -100,6 +224,13 @@ function createFallbackMeals(date: string): Meal[] {
       </div>
     </div>
 
+    <GoogleCalendar
+      :meal-events="calendarMealEvents"
+      :selected-date="selectedDate"
+      @date-selected="openDateDetail"
+      @events-loaded="handleCalendarEventsLoaded"
+    />
+
     <div class="content-grid">
       <section class="panel">
         <p class="label">Current month</p>
@@ -112,64 +243,163 @@ function createFallbackMeals(date: string): Meal[] {
       </section>
     </div>
 
-    <div class="workspace-grid">
-      <section class="panel">
-        <div class="section-header">
-          <div>
-            <p class="label">Meals</p>
-            <h3>Daily meal records</h3>
-          </div>
-          <button
-            type="button"
-            class="button-outline"
-            :disabled="mealsLoading"
-            @click="loadMeals(selectedDate)"
-          >
-            Refresh records
-          </button>
+    <section v-if="hasDetailDate" class="detail-page">
+      <div class="detail-header">
+        <div>
+          <p class="eyebrow">Selected Date</p>
+          <h3>{{ detailDate }}</h3>
         </div>
 
-        <p v-if="mealsMessage" class="info-message">
-          {{ mealsMessage }}
-        </p>
+        <div class="detail-actions">
+          <button type="button" class="button-outline" @click="isAiDrawerOpen = true">Ask AI</button>
+          <button type="button" class="button-outline" @click="closeDateDetail">Close</button>
+        </div>
+      </div>
 
-        <p v-if="mealsLoading" class="subtle-text">Loading meal records...</p>
-
-        <ul v-else-if="hasMeals" class="meal-list">
-          <li v-for="meal in meals" :key="meal.id" class="meal-list-item">
+      <div class="detail-grid">
+        <section class="panel">
+          <div class="section-header">
             <div>
-              <p class="meal-type">{{ meal.type }}</p>
-              <p class="meal-content">{{ meal.content }}</p>
+              <p class="label">Meals</p>
+              <h3>Daily meal records</h3>
             </div>
-            <strong class="meal-calories">{{ meal.calories ?? '--' }} kcal</strong>
-          </li>
-        </ul>
+          </div>
 
-        <p v-else class="subtle-text">No meal records yet.</p>
-      </section>
+          <form class="meal-form" @submit.prevent="addMealRecord">
+            <select v-model="mealForm.type" aria-label="Meal type">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
 
-      <AIDecisionDashboard :selected-date="selectedDate" @accepted="handleRecommendationAccepted" />
+            <input v-model="mealForm.content" aria-label="Meal details" placeholder="Meal details" />
+            <input v-model="mealForm.calories" aria-label="Calories" inputmode="numeric" placeholder="Calories" />
+            <button type="submit">Add record</button>
+          </form>
+
+          <p v-if="formMessage" class="info-message">{{ formMessage }}</p>
+
+          <ul v-if="hasDetailMeals" class="meal-list">
+            <li v-for="meal in detailMeals" :key="meal.id" class="meal-list-item">
+              <div>
+                <p class="meal-type">{{ meal.type }}</p>
+                <p class="meal-content">{{ meal.content }}</p>
+              </div>
+              <div class="meal-actions">
+                <strong class="meal-calories">{{ meal.calories ?? '--' }} kcal</strong>
+                <button
+                  v-if="canDeleteMeal(meal)"
+                  type="button"
+                  class="delete-button"
+                  @click="deleteMealRecord(meal.id)"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          </ul>
+
+          <p v-else class="subtle-text">No meal records yet.</p>
+        </section>
+
+        <section class="panel">
+          <div class="section-header">
+            <div>
+              <p class="label">Calendar</p>
+              <h3>Google Calendar activities</h3>
+            </div>
+          </div>
+
+          <ul v-if="hasDetailEvents" class="activity-list">
+            <li v-for="event in detailEvents" :key="event.id" class="activity-item">
+              <div>
+                <p class="activity-title">{{ event.title }}</p>
+                <p v-if="event.start" class="subtle-text">{{ event.start }}</p>
+                <p v-if="event.location" class="subtle-text">{{ event.location }}</p>
+              </div>
+              <a v-if="event.htmlLink" :href="event.htmlLink" target="_blank" rel="noreferrer">Open</a>
+            </li>
+          </ul>
+
+          <p v-else class="subtle-text">No Google Calendar activities for this date.</p>
+        </section>
+      </div>
+    </section>
+
+    <section v-else class="panel empty-detail">
+      <p class="label">Date details</p>
+      <strong>Select a date on the calendar to view meals and activities.</strong>
+    </section>
+
+    <div v-if="isAiDrawerOpen && detailDate" class="drawer-backdrop" @click.self="isAiDrawerOpen = false">
+      <aside class="ai-drawer" aria-label="AI recommendations drawer">
+        <div class="drawer-header">
+          <div>
+            <p class="eyebrow">Ask AI</p>
+            <h3>{{ detailDate }}</h3>
+          </div>
+          <button type="button" class="button-outline" @click="isAiDrawerOpen = false">Close</button>
+        </div>
+
+        <AIDecisionDashboard :selected-date="detailDate" @accepted="handleRecommendationAccepted" />
+      </aside>
     </div>
   </section>
 </template>
 
 <style scoped>
-.workspace-grid {
+.detail-page {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.detail-header,
+.section-header,
+.activity-item,
+.meal-list-item,
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.detail-header h3,
+.section-header h3,
+.drawer-header h3 {
+  margin: 0;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1rem;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.8rem;
-  align-items: flex-start;
+.meal-form {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(180px, 1.4fr) minmax(100px, 0.7fr) auto;
+  gap: 0.6rem;
   margin-bottom: 0.8rem;
 }
 
-.section-header h3 {
-  margin: 0;
+select {
+  border: 1px solid #cbd5df;
+  border-radius: 6px;
+  color: #18212f;
+  background: #ffffff;
+  padding: 0.62rem 0.75rem;
 }
 
 .button-outline {
@@ -184,10 +414,10 @@ function createFallbackMeals(date: string): Meal[] {
 
 .info-message {
   margin: 0 0 0.8rem;
-  border: 1px solid #efd8b2;
+  border: 1px solid #b8dbd5;
   border-radius: 8px;
-  background: #fff8eb;
-  color: #845f23;
+  background: #edf8f6;
+  color: #124740;
   padding: 0.6rem 0.75rem;
   font-size: 0.86rem;
 }
@@ -197,7 +427,8 @@ function createFallbackMeals(date: string): Meal[] {
   color: #5c6a78;
 }
 
-.meal-list {
+.meal-list,
+.activity-list {
   display: grid;
   gap: 0.7rem;
   list-style: none;
@@ -205,14 +436,11 @@ function createFallbackMeals(date: string): Meal[] {
   padding: 0;
 }
 
-.meal-list-item {
+.meal-list-item,
+.activity-item {
   border: 1px solid #d8dee6;
   border-radius: 8px;
   background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
   padding: 0.8rem 0.9rem;
 }
 
@@ -224,8 +452,14 @@ function createFallbackMeals(date: string): Meal[] {
   font-weight: 700;
 }
 
-.meal-content {
+.meal-content,
+.activity-title {
   margin: 0.22rem 0 0;
+}
+
+.activity-title {
+  color: #18212f;
+  font-weight: 700;
 }
 
 .meal-calories {
@@ -234,14 +468,64 @@ function createFallbackMeals(date: string): Meal[] {
   white-space: nowrap;
 }
 
+.meal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.delete-button {
+  border-color: #e3b8b8;
+  background: #fff5f5;
+  color: #8f1d1d;
+}
+
+.delete-button:hover {
+  background: #fde8e8;
+}
+
+.empty-detail strong {
+  font-size: 1rem;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(15 23 42 / 35%);
+}
+
+.ai-drawer {
+  width: min(720px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid #d8dee6;
+  background: #f7f8fa;
+  padding: 1rem;
+}
+
+.drawer-header {
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 960px) {
-  .workspace-grid {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .meal-form {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 760px) {
-  .section-header {
+  .detail-header,
+  .section-header,
+  .drawer-header {
     align-items: stretch;
     flex-direction: column;
   }
