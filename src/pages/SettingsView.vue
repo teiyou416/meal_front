@@ -12,24 +12,24 @@ const { name, allergies, dietaryPreferences } = storeToRefs(userStore)
     <div class="page-header">
       <div>
         <p class="eyebrow">Settings</p>
-        <h2>偏好设置</h2>
+        <h2>Preference settings</h2>
       </div>
     </div>
 
     <div class="content-grid">
       <section class="panel">
-        <p class="label">用户</p>
+        <p class="label">User</p>
         <strong>{{ name }}</strong>
       </section>
 
       <section class="panel">
-        <p class="label">过敏信息</p>
-        <strong>{{ allergies.length ? allergies.join(', ') : '未设置' }}</strong>
+        <p class="label">Allergies</p>
+        <strong>{{ allergies.length ? allergies.join(', ') : 'Not set' }}</strong>
       </section>
 
       <section class="panel">
-        <p class="label">饮食偏好</p>
-        <strong>{{ dietaryPreferences.length ? dietaryPreferences.join(', ') : '未设置' }}</strong>
+        <p class="label">Dietary preferences</p>
+        <strong>{{ dietaryPreferences.length ? dietaryPreferences.join(', ') : 'Not set' }}</strong>
       </section>
     </div>
   </section>

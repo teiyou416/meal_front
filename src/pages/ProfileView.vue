@@ -13,16 +13,16 @@ const userStore = useUserStore()
 const { id, initials, name } = storeToRefs(userStore)
 
 const trainingOptions: Array<{ value: TrainingExperience; label: string }> = [
-  { value: 'fitness', label: '健身' },
-  { value: 'yoga', label: '瑜伽' },
-  { value: 'pilates', label: '普拉提' },
-  { value: 'climbing', label: '攀岩' },
+  { value: 'fitness', label: 'Fitness' },
+  { value: 'yoga', label: 'Yoga' },
+  { value: 'pilates', label: 'Pilates' },
+  { value: 'climbing', label: 'Climbing' },
 ]
 
 const goalOptions: Array<{ value: FitnessGoal; label: string }> = [
-  { value: 'lose_weight', label: '减重' },
-  { value: 'build_muscle', label: '增肌' },
-  { value: 'maintain_shape', label: '维持身材' },
+  { value: 'lose_weight', label: 'Lose weight' },
+  { value: 'build_muscle', label: 'Build muscle' },
+  { value: 'maintain_shape', label: 'Maintain shape' },
 ]
 
 const form = reactive({
@@ -46,27 +46,27 @@ async function saveProfile() {
   const monthlyFoodBudget = Number(form.monthlyFoodBudget)
 
   if (!Number.isFinite(heightCm) || heightCm < 80 || heightCm > 260) {
-    saveError.value = '请输入有效的身高（80-260 cm）。'
+    saveError.value = 'Please enter a valid height (80-260 cm).'
     return
   }
 
   if (!Number.isFinite(weightKg) || weightKg < 20 || weightKg > 300) {
-    saveError.value = '请输入有效的体重（20-300 kg）。'
+    saveError.value = 'Please enter a valid weight (20-300 kg).'
     return
   }
 
   if (form.trainingExperience.length === 0) {
-    saveError.value = '请至少选择一项运动经验。'
+    saveError.value = 'Please select at least one training experience.'
     return
   }
 
   if (!form.fitnessGoal) {
-    saveError.value = '请选择目标。'
+    saveError.value = 'Please select a goal.'
     return
   }
 
   if (!Number.isFinite(monthlyFoodBudget) || monthlyFoodBudget < 100) {
-    saveError.value = '请输入有效的每月饮食费上限（至少 100）。'
+    saveError.value = 'Please enter a valid monthly food budget (at least 100).'
     return
   }
 
@@ -89,14 +89,14 @@ async function saveProfile() {
       monthlyFoodBudget,
     })
 
-    saveSuccess.value = '资料已更新。'
+    saveSuccess.value = 'Profile has been updated.'
   } catch (error) {
     if (error instanceof Error && error.message) {
       saveError.value = error.message
       return
     }
 
-    saveError.value = '保存失败，请稍后重试。'
+    saveError.value = 'Save failed. Please try again later.'
   } finally {
     saveLoading.value = false
   }
@@ -122,7 +122,7 @@ async function logout() {
     <div class="page-header">
       <div>
         <p class="eyebrow">Profile</p>
-        <h2>用户资料</h2>
+        <h2>User profile</h2>
       </div>
     </div>
 
@@ -139,16 +139,16 @@ async function logout() {
     </section>
 
     <section class="panel form-panel">
-      <h3 class="section-title">基础资料（可随时修改）</h3>
+      <h3 class="section-title">Basic profile (editable anytime)</h3>
       <form class="profile-form" @submit.prevent="saveProfile">
-        <label class="field-label" for="profile-height">身高 (cm)</label>
+        <label class="field-label" for="profile-height">Height (cm)</label>
         <input id="profile-height" v-model="form.heightCm" inputmode="decimal" required />
 
-        <label class="field-label" for="profile-weight">体重 (kg)</label>
+        <label class="field-label" for="profile-weight">Weight (kg)</label>
         <input id="profile-weight" v-model="form.weightKg" inputmode="decimal" required />
 
         <fieldset class="checkbox-group">
-          <legend class="field-label">运动经验（可多选）</legend>
+          <legend class="field-label">Training experience (multiple choices allowed)</legend>
           <label v-for="option in trainingOptions" :key="option.value" class="checkbox-row">
             <input v-model="form.trainingExperience" type="checkbox" :value="option.value" />
             <span>{{ option.label }}</span>
@@ -156,21 +156,21 @@ async function logout() {
         </fieldset>
 
         <fieldset class="radio-group">
-          <legend class="field-label">目标（单选）</legend>
+          <legend class="field-label">Goal (single choice)</legend>
           <label v-for="option in goalOptions" :key="option.value" class="checkbox-row">
             <input v-model="form.fitnessGoal" type="radio" name="profile-goal" :value="option.value" />
             <span>{{ option.label }}</span>
           </label>
         </fieldset>
 
-        <label class="field-label" for="profile-budget">每月饮食费上限</label>
+        <label class="field-label" for="profile-budget">Monthly food budget limit</label>
         <input id="profile-budget" v-model="form.monthlyFoodBudget" inputmode="numeric" required />
 
         <p v-if="saveError" class="error-message">{{ saveError }}</p>
         <p v-if="saveSuccess" class="success-message">{{ saveSuccess }}</p>
 
         <button type="submit" :disabled="saveLoading">
-          {{ saveLoading ? '保存中...' : '保存资料' }}
+          {{ saveLoading ? 'Saving...' : 'Save profile' }}
         </button>
       </form>
     </section>

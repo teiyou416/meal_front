@@ -23,31 +23,31 @@ const calendarOptions = reactive({
 let tokenClient: any;
 
 onMounted(() => {
-  // 1. GAPIは「カレンダー操作用」としてのみロードする（auth2は使わない）
+  // 1. Load GAPI only for Calendar operations. Do not use auth2.
   gapi.load('client', async () => {
     await gapi.client.init({
       discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
     });
   });
 
-  // 2. GIS（新しい認証ライブラリ）の初期化
-  // ※ window.google が認識されない場合は、TypeScriptのエラーを無視するか型定義を追加してください
+  // 2. Initialize GIS, the newer authentication library.
+  // If TypeScript does not recognize window.google, add a type definition or suppress that specific type error.
   tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: SCOPES,
     callback: async (tokenResponse: any) => {
       if (tokenResponse.error !== undefined) {
-        console.error('ログインエラー:', tokenResponse);
+        console.error('Login error:', tokenResponse);
         return;
       }
-      // ログイン成功後、予定を取得
+      // Fetch events after login succeeds.
       await listEvents();
     },
   });
 });
 
 const handleAuth = () => {
-  // ポップアップを開いてログインを要求する
+  // Open a popup and request login.
   tokenClient.requestAccessToken();
 };
 
@@ -55,24 +55,24 @@ const listEvents = async () => {
   try {
     const response = await gapi.client.calendar.events.list({
       calendarId: 'primary',
-      timeMin: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(), // 1ヶ月前から取得
+      timeMin: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(), // Fetch from one month ago.
       showDeleted: false,
       singleEvents: true,
-      maxResults: 100, // 取得件数を増やす
+      maxResults: 100, // Increase the number of fetched events.
       orderBy: 'startTime',
     });
     
-    // FullCalendarの形式に合わせて予定を成形
+    // Shape events for FullCalendar.
     calendarOptions.events = response.result.items.map((event: any) => ({
       id: event.id,
       title: event.summary,
       start: event.start.dateTime || event.start.date,
       end: event.end?.dateTime || event.end?.date,
-      backgroundColor: '#1f6f63', // 任意の色
+      backgroundColor: '#1f6f63', // Custom color.
       borderColor: '#1f6f63'
     }));
   } catch (err) {
-    console.error('カレンダー取得エラー:', err);
+    console.error('Calendar fetch error:', err);
   }
 };
 </script>
@@ -80,8 +80,8 @@ const listEvents = async () => {
 <template>
   <div class="calendar-container">
     <div class="header-actions">
-      <h2>Google Calendar連携</h2>
-      <button class="auth-button" @click="handleAuth">カレンダーにアクセス</button>
+      <h2>Google Calendar integration</h2>
+      <button class="auth-button" @click="handleAuth">Access calendar</button>
     </div>
     
     <div class="calendar-wrapper">
@@ -125,7 +125,7 @@ const listEvents = async () => {
 }
 
 .calendar-wrapper {
-  /* FullCalendarの文字を少し見やすく調整 */
+  /* Tune FullCalendar text and button colors for readability. */
   --fc-button-bg-color: #1f6f63;
   --fc-button-border-color: #1f6f63;
   --fc-button-hover-bg-color: #185a50;

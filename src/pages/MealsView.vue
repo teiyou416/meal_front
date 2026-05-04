@@ -11,12 +11,12 @@ const { selectedDate } = storeToRefs(useDateStore())
     <div class="page-header">
       <div>
         <p class="eyebrow">Meals</p>
-        <h2>饮食记录</h2>
+        <h2>Meal records</h2>
       </div>
     </div>
 
     <section class="panel">
-      <p class="label">记录日期</p>
+      <p class="label">Record date</p>
       <strong>{{ selectedDate }}</strong>
     </section>
   </section>

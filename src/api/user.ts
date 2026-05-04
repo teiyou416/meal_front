@@ -134,7 +134,7 @@ async function updateUserProfileWithFallback(payload: UserProfilePayload) {
     () => request.post<unknown, ApiResponse<UserProfileResponse>>('/private/me/profile', legacyPayload),
   ]
 
-  let latestError: unknown = new Error('更新用户资料失败')
+  let latestError: unknown = new Error('Failed to update user profile')
 
   for (const attempt of attempts) {
     try {
@@ -173,14 +173,10 @@ function parseExerciseExperience(value: string | undefined) {
   }
 
   const dictionary: Record<string, TrainingExperience> = {
-    健身: 'fitness',
-    yoga: 'yoga',
-    瑜伽: 'yoga',
-    普拉提: 'pilates',
-    pilates: 'pilates',
-    攀岩: 'climbing',
-    climbing: 'climbing',
     fitness: 'fitness',
+    yoga: 'yoga',
+    pilates: 'pilates',
+    climbing: 'climbing',
   }
 
   const items = value
@@ -198,15 +194,15 @@ function normalizeGoal(value: unknown): FitnessGoal | null {
     return value
   }
 
-  if (value === '减重') {
+  if (value === 'lose weight') {
     return 'lose_weight'
   }
 
-  if (value === '增肌') {
+  if (value === 'build muscle') {
     return 'build_muscle'
   }
 
-  if (value === '维持身材') {
+  if (value === 'maintain shape') {
     return 'maintain_shape'
   }
 
@@ -215,22 +211,22 @@ function normalizeGoal(value: unknown): FitnessGoal | null {
 
 function toGoalText(value: FitnessGoal) {
   if (value === 'lose_weight') {
-    return '减重'
+    return 'Lose weight'
   }
 
   if (value === 'build_muscle') {
-    return '增肌'
+    return 'Build muscle'
   }
 
-  return '维持身材'
+  return 'Maintain shape'
 }
 
 function toExerciseText(items: TrainingExperience[]) {
   const map: Record<TrainingExperience, string> = {
-    fitness: '健身',
-    yoga: '瑜伽',
-    pilates: '普拉提',
-    climbing: '攀岩',
+    fitness: 'Fitness',
+    yoga: 'Yoga',
+    pilates: 'Pilates',
+    climbing: 'Climbing',
   }
 
   return items.map((item) => map[item] ?? item).join(',')
