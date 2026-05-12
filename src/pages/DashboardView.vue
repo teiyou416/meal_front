@@ -4,6 +4,7 @@ import { computed, reactive, ref } from 'vue'
 
 import AIDecisionDashboard from '@/components/ai/AIDecisionDashboard.vue'
 import GoogleCalendar from '@/components/calendar/GoogleCalendar.vue'
+import GraphPanel from '@/components/graph/GraphPanel.vue'
 import { useDateStore } from '@/stores/date'
 import type { Meal, MealType } from '@/types'
 
@@ -206,8 +207,13 @@ function canDeleteMeal(meal: Meal) {
 </script>
 
 <template>
-  <section class="page">
-    <div class="page-header">
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar">
+      <GraphPanel />
+    </aside>
+
+    <section class="page dashboard-main">
+      <div class="page-header">
       <div>
         <p class="eyebrow">Unified Workspace</p>
         <h2>Meal Records + AI Recommendation Workspace</h2>
@@ -345,8 +351,34 @@ function canDeleteMeal(meal: Meal) {
         <AIDecisionDashboard :selected-date="detailDate" @accepted="handleRecommendationAccepted" />
       </aside>
     </div>
-  </section>
+    </section>
+  </div>
 </template>
+
+<style scoped>
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dashboard-main {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 
 <style scoped>
 .detail-page {

@@ -1,5 +1,6 @@
 import request from './request'
 import type { ApiResponse, Meal } from '@/types'
+import type { WeeklyNutritionResponse } from '../types/nutrients'
 
 export function getMealsByDate(date: string) {
   return request.get<unknown, ApiResponse<Meal[]>>('/meals', {
@@ -17,4 +18,10 @@ export function updateMeal(id: string, payload: Partial<Omit<Meal, 'id'>>) {
 
 export function deleteMeal(id: string) {
   return request.delete<unknown, ApiResponse<null>>(`/meals/${id}`)
+}
+
+export function getWeeklyNutrition(startDate: string, endDate: string) {
+  return request.get<unknown, ApiResponse<WeeklyNutritionResponse>>('/meals/nutrition', {
+    params: { startDate, endDate },
+  })
 }

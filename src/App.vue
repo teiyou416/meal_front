@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import { RouterLink, RouterView } from 'vue-router'
 
 import { useUserStore } from '@/stores/user'
+import GraphPanel from '@/components/graph/GraphPanel.vue'
 
 const userStore = useUserStore()
 const { initials, isLoggedIn, name } = storeToRefs(userStore)
@@ -10,18 +11,6 @@ const { initials, isLoggedIn, name } = storeToRefs(userStore)
 
 <template>
   <div class="app-shell">
-    <aside class="sidebar">
-      <div>
-        <p class="eyebrow">Meal Calendar</p>
-        <h1>AI Meal Workspace</h1>
-      </div>
-
-      <nav class="nav-list" aria-label="Main navigation">
-        <RouterLink to="/">Dashboard</RouterLink>
-        <RouterLink v-if="isLoggedIn" to="/profile">Profile</RouterLink>
-      </nav>
-    </aside>
-
     <main class="main-content">
       <header class="topbar">
         <div>
