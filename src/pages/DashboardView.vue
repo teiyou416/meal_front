@@ -5,7 +5,7 @@ import { computed, ref, watch } from 'vue'
 import { getMealsByDate } from '@/api/meal'
 import AIDecisionDashboard from '@/components/ai/AIDecisionDashboard.vue'
 import { useDateStore } from '@/stores/date'
-import type { Meal } from '@/types'
+import type { Meal, MealType } from '@/types'
 
 const dateStore = useDateStore()
 const { selectedDate, selectedMonth } = storeToRefs(dateStore)
@@ -13,6 +13,7 @@ const { selectedDate, selectedMonth } = storeToRefs(dateStore)
 const meals = ref<Meal[]>([])
 const mealsLoading = ref(false)
 const mealsMessage = ref('')
+const selectedRecommendationMealType = ref<MealType>('dinner')
 
 const hasMeals = computed(() => meals.value.length > 0)
 
@@ -43,6 +44,7 @@ function handleRecommendationAccepted(payload: {
   recommendationId: string
   name: string
   date: string
+  mealType: MealType
   calories: number
 }) {
   if (payload.date !== selectedDate.value) {
@@ -53,7 +55,7 @@ function handleRecommendationAccepted(payload: {
     {
       id: `ai-${payload.recommendationId}-${Date.now()}`,
       date: payload.date,
-      type: 'dinner',
+      type: payload.mealType,
       content: payload.name,
       calories: payload.calories,
     },
@@ -143,7 +145,23 @@ function createFallbackMeals(date: string): Meal[] {
         <p v-else class="subtle-text">暂无饮食记录。</p>
       </section>
 
-      <AIDecisionDashboard :selected-date="selectedDate" @accepted="handleRecommendationAccepted" />
+      <div class="ai-column">
+        <section class="panel">
+          <p class="label">AI 推荐类型</p>
+          <select v-model="selectedRecommendationMealType" aria-label="选择 AI 推荐餐别">
+            <option value="breakfast">早餐</option>
+            <option value="lunch">午餐</option>
+            <option value="dinner">晚餐</option>
+            <option value="snack">加餐</option>
+          </select>
+        </section>
+
+        <AIDecisionDashboard
+          :selected-date="selectedDate"
+          :meal-type="selectedRecommendationMealType"
+          @accepted="handleRecommendationAccepted"
+        />
+      </div>
     </div>
   </section>
 </template>
@@ -153,6 +171,21 @@ function createFallbackMeals(date: string): Meal[] {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1rem;
+}
+
+.ai-column {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.ai-column select {
+  width: 100%;
+  border: 1px solid #cbd5df;
+  border-radius: 6px;
+  color: #18212f;
+  background: #ffffff;
+  padding: 0.62rem 0.75rem;
 }
 
 .section-header {

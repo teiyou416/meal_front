@@ -1,3 +1,5 @@
+import type { MealType } from './index'
+
 export interface AIRecommendation {
   id: string
   name: string
@@ -12,7 +14,7 @@ export interface AIRecommendation {
 
 export interface CreateMealPayload {
   name: string
-  mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'
+  mealType: MealType
   date: string
   calories: number
   protein: number
@@ -21,4 +23,3 @@ export interface CreateMealPayload {
   source: 'ai-recommendation' | 'manual'
   recommendationId?: string
 }
-
